@@ -1,21 +1,32 @@
-This script automates plomlompom's backup process. It's not very sophisticated or well-structured, but it
-currently does the job. It needs three arguments:
+This script automates plomlompom's backup process. It's not very
+sophisticated or well-structured, but it currently does the job. It
+needs three arguments:
 
-- the relative path of a text file that contains on each line the relative path of a file or directory to back
-  up
-- the absolute or relative path of a block device with a LUKS-encrypted filesystem on it
-- the path of a directory on the aforementioned filesystem into which to back up the files and directories;
-  this path must be relative to the root of said filesystem
+- the relative path of a text file that contains on each line the
+  relative path of a file or directory to back up
 
-On execution, the script asks for the LUKS decryption key. It may further ask for confirmation before
-overwriting existing backup directory. Into the backup directory, it writes a file "lastupdate" that contains
-the date of the backup process. In the improbable case that a file with such a name already exists (if one was
-selected to be backed up by the file that lists what to back up), it also asks for confirmation on overwriting
-that one. In the end, all file copies are compared against their original to warn against potential data
+- the absolute or relative path of a block device with a
+  LUKS-encrypted filesystem on it
+
+- the path of a directory on the aforementioned filesystem into which
+  to back up the files and directories; this path must be relative to
+  the root of said filesystem
+
+On execution, the script asks for the LUKS decryption key. It may
+further ask for confirmation before overwriting existing backup
+directory. Into the backup directory, it writes a file "lastupdate" that
+contains the date of the backup process. In the improbable case that a
+file with such a name already exists (if one was selected to be backed
+up by the file that lists what to back up), it also asks for
+confirmation on overwriting that one. In the end, all file copies are
+compared against their original to warn against potential data
 corruption.
 
-The script opens and closes the LUKS container and mounts its filesystem to /mnt/secret (and unmounts it again
-when finished). If /mnt/secret does not exists, it gets created for the duration of the script and deleted at
-the end. Various safeguards are implemented to avoid collisions with other mounts, device mappings, existing
-directories etc. If foreseeable errors occur, the script tries to clean up and exits. If unforeseen errors
-occur, the script does not clean up on exit, but informs on what should be done to clean up manually.
+The script opens and closes the LUKS container and mounts its
+filesystem to /mnt/secret (and unmounts it again when finished). If
+/mnt/secret does not exists, it gets created for the duration of the
+script and deleted at the end. Various safeguards are implemented to
+avoid collisions with other mounts, device mappings, existing
+directories etc. If foreseeable errors occur, the script tries to clean
+up and exits. If unforeseen errors occur, the script does not clean up
+on exit, but informs on what should be done to clean up manually.
