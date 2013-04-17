@@ -20,11 +20,20 @@ function exitclean {
   exit
 }
 
-# Abort verbosely if any unforeseen error occurs.
+# Abort verbosely about cleaning up possibilities if any unforeseen error occurs.
 
 function exitwarning {
   echo "Error occured. Aborting."
-  exitclean
+  if [[ 1 == $ISMOUNTED ]]; then
+    echo "Still to be unmounted: $MOUNT (try 'umount $MOUNT')"
+  fi
+  if [[ 1 == $ISMAPPED ]]; then
+    echo "Crypto container still to be closed: $MAPPING (try 'cryptsetup luksClose $MAPPING')"
+  fi
+  if [[ 1 == $BUILDMOUNTDIR ]]; then
+    echo "Mount dir $MOUNT was created by script, could be deleted (try 'rmdir $MOUNT')"
+  fi
+  exit
 }
 trap exitwarning ERR
 
@@ -98,7 +107,7 @@ fi
 
 if [[ -d $TEMP ]]; then
   echo 'Suspicious temp dir found. Aborting.'
-  exit
+  exitclean
 fi
 if [[ -d $BACKUPDIR ]]; then
   echo "Backup directory $BACKUPDIR already exists. Overwrite? y/n"
@@ -127,10 +136,10 @@ while read LINE; do
   fi
   cp -R $LINE $TEMP
 done < "$DIRLIST"
-echo "Moving $TEMP to $BACKUPDIR"
 
 # After moving temp dir to backup dir proper, compare result with original (backed-up) file tree.
 
+echo "Moving $TEMP to $BACKUPDIR"
 mv $TEMP $BACKUPDIR
 echo 'Comparing original and copy.'
 DIFFSFOUND=0

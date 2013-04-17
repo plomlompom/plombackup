@@ -17,4 +17,5 @@ corruption.
 The script opens and closes the LUKS container and mounts its filesystem to /mnt/secret (and unmounts it again
 when finished). If /mnt/secret does not exists, it gets created for the duration of the script and deleted at
 the end. Various safeguards are implemented to avoid collisions with other mounts, device mappings, existing
-directories etc. If errors occur, the script tries to clean up and exits.
+directories etc. If foreseeable errors occur, the script tries to clean up and exits. If unforeseen errors
+occur, the script does not clean up on exit, but informs on what should be done to clean up manually.
