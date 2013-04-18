@@ -45,16 +45,19 @@ BACKUPDEVICE=$2
 BACKUPDIR=$MOUNT/$3
 if [[ ! $DIRLIST || ! -f $DIRLIST ]]; then
   echo 'File containing a list of files/directories not found.'
+  echo 'Usage: plombackup.sh dirlist_file backup_device_path backup_dir_on_backup_device'
   exit
 fi
 echo "Using list of files/directories to back up: $DIRLIST"
 if [[ ! $BACKUPDEVICE ]]; then
   echo 'No backup device declared. Aborting.'
+  echo 'Usage: plombackup.sh dirlist_file backup_device_path backup_dir_on_backup_device'
   exit
 fi
 echo "Using as backup device: $BACKUPDEVICE"
 if [[ $3 == "" ]]; then
   echo 'No directory to back up to named. Aborting.'
+  echo 'Usage: plombackup.sh dirlist_file backup_device_path backup_dir_on_backup_device'
   exit
 fi
 echo "Using as backup directory: $BACKUPDIR"
