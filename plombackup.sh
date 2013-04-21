@@ -85,6 +85,19 @@ if [[ 'lastupdate' == $CHECKLASTUPDATE ]]; then
   exitclean
 fi
 
+echo "Checking for existence of all files/dirs named in $DIRLIST."
+
+UNFOUND=0
+while read LINE; do
+  if [[ ! -f $LINE && ! -d $LINE ]]; then
+    UNFOUND=1
+    echo "File/directory $LINE not found."
+  fi
+done < "$DIRLIST"
+if [[ 1 == $UNFOUND ]]; then
+  exitclean
+fi
+
 # Ensure valid mount directory.
 
 BUILDMOUNTDIR=0
