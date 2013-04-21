@@ -85,6 +85,8 @@ if [[ 'lastupdate' == $CHECKLASTUPDATE ]]; then
   exitclean
 fi
 
+# Check if all files/dirs to back up exist.
+
 echo "Checking for existence of all files/dirs named in $DIRLIST."
 
 UNFOUND=0
