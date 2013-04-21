@@ -23,7 +23,7 @@ function exitclean {
 # Abort verbosely about cleaning up possibilities if any unforeseen error occurs.
 
 function exitwarning {
-  echo "Error occured. Aborting."
+  echo "Error occured. Aborting WITHOUT CLEANING UP."
   if [[ 1 == $ISMOUNTED ]]; then
     echo "Still to be unmounted: $MOUNT (try 'umount $MOUNT')"
   fi
@@ -37,6 +37,24 @@ function exitwarning {
 }
 trap exitwarning ERR
 
+# Abort with usage info if no proper arguments given.
+
+function exitusage {
+  echo 'Usage: plombackup.sh dirlist_file backup_device_path backup_dir_on_backup_device'
+  exit
+}
+
+# Read answer to y/n question, cleanly abort on y.
+
+function exitquestion {
+  read ANSWER
+  FIRSTCHARANSWER=`echo $ANSWER | head -c 1`
+  if [[ ! $FIRSTCHARANSWER == 'y' && ! $FIRSTCHARANSWER == 'Y' ]]; then
+    echo 'Aborting.'
+    exitclean
+  fi
+}
+
 # First check on command parameters.
 
 MOUNT=/mnt/secret
@@ -44,23 +62,28 @@ DIRLIST=$1
 BACKUPDEVICE=$2
 BACKUPDIR=$MOUNT/$3
 if [[ ! $DIRLIST || ! -f $DIRLIST ]]; then
-  echo 'File containing a list of files/directories not found.'
-  echo 'Usage: plombackup.sh dirlist_file backup_device_path backup_dir_on_backup_device'
-  exit
+  echo 'File containing a list of files/directories not found. Aborting.'
+  exitusage
 fi
 echo "Using list of files/directories to back up: $DIRLIST"
 if [[ ! $BACKUPDEVICE ]]; then
   echo 'No backup device declared. Aborting.'
-  echo 'Usage: plombackup.sh dirlist_file backup_device_path backup_dir_on_backup_device'
-  exit
+  exitusage
 fi
 echo "Using as backup device: $BACKUPDEVICE"
 if [[ $3 == "" ]]; then
   echo 'No directory to back up to named. Aborting.'
-  echo 'Usage: plombackup.sh dirlist_file backup_device_path backup_dir_on_backup_device'
-  exit
+  exitusage
 fi
 echo "Using as backup directory: $BACKUPDIR"
+
+# Check for lastupdate file conflict.
+
+CHECKLASTUPDATE=`cat $DIRLIST | grep lastupdate | sed 's/ *$//g'`
+if [[ 'lastupdate' == $CHECKLASTUPDATE ]]; then
+  echo "$DIRLIST lists a file 'lastupdate' to back up into $BACKUPDIR, in conflict with the lastupdate file plombackup.sh is supposed to write there."
+  exitclean
+fi
 
 # Ensure valid mount directory.
 
@@ -109,34 +132,22 @@ fi
 # Check for suspiciously pre-existing directories on backup filesystem.
 
 if [[ -d $TEMP ]]; then
-  echo 'Suspicious temp dir found. Aborting.'
-  exitclean
+  echo 'Suspicious temp dir found. Delete y/n?'
+  exitquestion
+  rm -rf $TEMP
 fi
 if [[ -d $BACKUPDIR ]]; then
-  echo "Backup directory $BACKUPDIR already exists. Overwrite? y/n"
-  read ANSWER
-  FIRSTCHARANSWER=`echo $ANSWER | head -c 1`
-  if [[ ! $FIRSTCHARANSWER == 'y' && ! $FIRSTCHARANSWER == 'Y' ]]; then
-    echo 'Aborting.'
-    exitclean
-  fi
+  echo "Backup directory $BACKUPDIR already exists. Delete? y/n"
+  exitquestion
+  rm -rf $BACKUPDIR
 fi
 
-# Back up to temp dir first. Take care of (improbable) situation that a lastupdate file is backed up too.
+# Back up to temp dir first.
 
 echo "Copying everything to $TEMP first."
 mkdir $TEMP
 echo 'Last update: '`date` > $TEMP/lastupdate
 while read LINE; do
-  if [[ $LINE == 'lastupdate' ]]; then
-    echo 'File lastupdate already exists. Overwrite? y/n'
-    read ANSWER
-    FIRSTCHARANSWER=`echo $ANSWER | head -c 1`
-    if [[ ! $FIRSTCHARANSWER == 'y' && ! $FIRSTCHARANSWER == 'Y' ]]; then
-      echo 'Aborting.'
-      exitclean
-    fi
-  fi
   cp -R $LINE $TEMP
 done < "$DIRLIST"
 

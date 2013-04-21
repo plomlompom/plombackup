@@ -13,7 +13,7 @@ needs three arguments:
   the root of said filesystem
 
 On execution, the script asks for the LUKS decryption key. It may
-further ask for confirmation before overwriting existing backup
+further ask for confirmation before overwriting an existing backup
 directory. Into the backup directory, it writes a file "lastupdate" that
 contains the date of the backup process. In the improbable case that a
 file with such a name already exists (if one was selected to be backed
