@@ -15,12 +15,8 @@ needs three arguments:
 On execution, the script asks for the LUKS decryption key. It may
 further ask for confirmation before overwriting an existing backup
 directory. Into the backup directory, it writes a file "lastupdate" that
-contains the date of the backup process. In the improbable case that a
-file with such a name already exists (if one was selected to be backed
-up by the file that lists what to back up), it also asks for
-confirmation on overwriting that one. In the end, all file copies are
-compared against their original to warn against potential data
-corruption.
+contains the date of the backup process. All file copies are compared
+against their originals to warn against potential data corruption.
 
 The script opens and closes the LUKS container and mounts its
 filesystem to /mnt/secret (and unmounts it again when finished). If
