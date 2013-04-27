@@ -23,7 +23,7 @@ function exitclean {
 # Abort verbosely about cleaning up possibilities if any unforeseen error occurs.
 
 function exitwarning {
-  echo "Error occured. Aborting WITHOUT CLEANING UP."
+  echo "Unforeseen error occured. Aborting WITHOUT CLEANING UP."
   if [[ 1 == $ISMOUNTED ]]; then
     echo "Still to be unmounted: $MOUNT (try 'umount $MOUNT')"
   fi
