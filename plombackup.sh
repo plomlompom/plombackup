@@ -173,25 +173,29 @@ mv $TEMP $BACKUPDIR
 echo 'Comparing original and copy.'
 DIFFSFOUND=0
 while read LINE; do
-  FILELIST=`find $LINE -type f`
-  CMPFILELIST=`find $BACKUPDIR/$LINE -type f`
+  FILELIST=`find $LINE -type f | sort`
+  LINEBASE=`basename $LINE`
+  CMPFILELIST=`find $BACKUPDIR/$LINEBASE -type f | sort`
   NUMORIG=`echo "$FILELIST" | wc -l`
   NUMCOPY=`echo "$CMPFILELIST" | wc -l`
   if [[ ! $NUMORIG == $NUMCOPY ]]; then
     DIFFSFOUND=1
-    echo "Number of files does not match between $LINE/ and $BACKUPDIR/$LINE/"
+    echo "Number of files does not match between $LINE/ and $BACKUPDIR/$LINEBASE/"
   fi
   OLDIFS=$IFS
   IFS="
 "
+  LLINE=1
   for FILENAME in $FILELIST; do
     trap - ERR
-    DIFF=`cmp $FILENAME $BACKUPDIR/$FILENAME 2>&1`
+    CMPFILENAME=`echo "$CMPFILELIST" 2>&1 | head -$LLINE | tail -1`
+    DIFF=`cmp $FILENAME $CMPFILENAME 2>&1`
     trap exitwarning ERR
     if [[ ! $DIFF == "" ]]; then
       DIFFSFOUND=1
       echo $DIFF
     fi
+    LLINE=`expr $LLINE + 1`
   done
   IFS=$OLDIFS
   if [[ $DIFFSFOUND == 1 ]]; then
