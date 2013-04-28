@@ -118,9 +118,9 @@ fi
 ISMAPPED=0
 ISMOUNTED=0
 MAPPING=secret
-if [[ -f /dev/mapper/$MAPPING ]]; then
+if [[ -e /dev/mapper/$MAPPING ]]; then
    echo "/dev/mapper/$MAPPING already exists. Aborting."
-   exit
+   exitclean
 fi
 echo "Opening $BACKUPDEVICE into '$MAPPING' crypto container, mounting to $MOUNT"
 cryptsetup luksOpen $BACKUPDEVICE $MAPPING
