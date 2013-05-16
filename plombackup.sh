@@ -40,7 +40,7 @@ trap exitwarning ERR
 # Abort with usage info if no proper arguments given.
 
 function exitusage {
-  echo 'Usage: plombackup.sh dirlist_file backup_device_path backup_dir_on_backup_device'
+  echo 'Usage: plombackup.sh dirlist_file backup_device_path backup_dir_on_backup_device [check]'
   exit
 }
 
@@ -76,6 +76,15 @@ if [[ $3 == "" ]]; then
   exitusage
 fi
 echo "Using as backup directory: $BACKUPDIR"
+CHECK=0
+if [[ $4 == 'check' ]]; then
+  echo "Will check for corrupted copies."
+  CHECK=1
+elif [[ $4 == '' ]]; then
+  echo "Won't check for corrupted copies."
+else
+  exitusage
+fi
 
 # Check for lastupdate file conflict.
 
@@ -170,39 +179,42 @@ done < "$DIRLIST"
 
 echo "Moving $TEMP to $BACKUPDIR"
 mv $TEMP $BACKUPDIR
-echo 'Comparing original and copy.'
-DIFFSFOUND=0
-while read LINE; do
-  FILELIST=`find $LINE -type f | sort`
-  LINEBASE=`basename $LINE`
-  CMPFILELIST=`find $BACKUPDIR/$LINEBASE -type f | sort`
-  NUMORIG=`echo "$FILELIST" | wc -l`
-  NUMCOPY=`echo "$CMPFILELIST" | wc -l`
-  if [[ ! $NUMORIG == $NUMCOPY ]]; then
-    DIFFSFOUND=1
-    echo "Number of files does not match between $LINE/ and $BACKUPDIR/$LINEBASE/"
-  fi
-  OLDIFS=$IFS
-  IFS="
-"
-  LLINE=1
-  for FILENAME in $FILELIST; do
-    trap - ERR
-    CMPFILENAME=`echo "$CMPFILELIST" 2>&1 | head -$LLINE | tail -1`
-    DIFF=`cmp $FILENAME $CMPFILENAME 2>&1`
-    trap exitwarning ERR
-    if [[ ! $DIFF == "" ]]; then
+
+if [[ 1 == $CHECK ]]; then
+  echo 'Comparing original and copy.'
+  DIFFSFOUND=0
+  while read LINE; do
+    FILELIST=`find $LINE -type f | sort`
+    LINEBASE=`basename $LINE`
+    CMPFILELIST=`find $BACKUPDIR/$LINEBASE -type f | sort`
+    NUMORIG=`echo "$FILELIST" | wc -l`
+    NUMCOPY=`echo "$CMPFILELIST" | wc -l`
+    if [[ ! $NUMORIG == $NUMCOPY ]]; then
       DIFFSFOUND=1
-      echo $DIFF
+      echo "Number of files does not match between $LINE/ and $BACKUPDIR/$LINEBASE/"
     fi
-    LLINE=`expr $LLINE + 1`
-  done
-  IFS=$OLDIFS
-  if [[ $DIFFSFOUND == 1 ]]; then
-    echo "$LINE: WARNING! Found differences between original and copy."
-  else
-    echo "$LINE: No byte differences found between original and copy. Everything's fine!"
-  fi
-done < "$DIRLIST"
+    OLDIFS=$IFS
+    IFS="
+"
+    LLINE=1
+    for FILENAME in $FILELIST; do
+      trap - ERR
+      CMPFILENAME=`echo "$CMPFILELIST" 2>&1 | head -$LLINE | tail -1`
+      DIFF=`cmp $FILENAME $CMPFILENAME 2>&1`
+      trap exitwarning ERR
+      if [[ ! $DIFF == "" ]]; then
+        DIFFSFOUND=1
+        echo $DIFF
+      fi
+      LLINE=`expr $LLINE + 1`
+    done
+    IFS=$OLDIFS
+    if [[ $DIFFSFOUND == 1 ]]; then
+      echo "$LINE: WARNING! Found differences between original and copy."
+    else
+      echo "$LINE: No byte differences found between original and copy. Everything's fine!"
+    fi
+  done < "$DIRLIST"
+fi
 
 exitclean
