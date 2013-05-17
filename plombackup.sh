@@ -40,7 +40,13 @@ trap exitwarning ERR
 # Abort with usage info if no proper arguments given.
 
 function exitusage {
-  echo 'Usage: plombackup.sh dirlist_file backup_device_path backup_dir_on_backup_device [check]'
+  echo 'Usage: plombackup.sh -i DIRLIST -d BACKUPDEVICE -o BACKUPDIR [-c]
+Options:
+  -h                  display this help
+  -i DIRLIST          set path of file to read files/dirs to backup from
+  -d BACKUPDEVICE     set path of backup device
+  -o BACKUPDIR        set path to backup to inside backup device filesystem
+  -c                  check for corrupted copies by comparing files byte by byte'
   exit
 }
 
@@ -55,12 +61,31 @@ function exitquestion {
   fi
 }
 
-# First check on command parameters.
+# Get and check on command parameters.
 
 MOUNT=/mnt/secret
-DIRLIST=$1
-BACKUPDEVICE=$2
-BACKUPDIR=$MOUNT/$3
+while getopts ':hi:d:o:c' OPT; do
+  case $OPT in
+    h)
+      exitusage
+      ;;
+    i)
+      DIRLIST=$OPTARG
+      ;;
+    d)
+      BACKUPDEVICE=$OPTARG
+      ;;
+    o)
+      BACKUPDIR=$OPTARG
+      ;;
+    c)
+      CHECK=1
+      ;;
+    ?)
+      echo 'Bad syntax.'
+      exitusage
+  esac
+done
 if [[ ! $DIRLIST || ! -f $DIRLIST ]]; then
   echo 'File containing a list of files/directories not found. Aborting.'
   exitusage
@@ -71,19 +96,17 @@ if [[ ! $BACKUPDEVICE ]]; then
   exitusage
 fi
 echo "Using as backup device: $BACKUPDEVICE"
-if [[ $3 == "" ]]; then
+if [[ $BACKUPDIR == "" ]]; then
   echo 'No directory to back up to named. Aborting.'
   exitusage
+else
+  BACKUPDIR=$MOUNT/$BACKUPDIR
 fi
 echo "Using as backup directory: $BACKUPDIR"
-CHECK=0
-if [[ $4 == 'check' ]]; then
+if [[ 1 == $CHECK ]]; then
   echo "Will check for corrupted copies."
-  CHECK=1
-elif [[ $4 == '' ]]; then
-  echo "Won't check for corrupted copies."
 else
-  exitusage
+  echo "Won't check for corrupted copies."
 fi
 
 # Check for lastupdate file conflict.
