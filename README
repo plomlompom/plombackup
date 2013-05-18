@@ -1,28 +1,44 @@
-This script automates plomlompom's backup process. It's not very
-sophisticated or well-structured, but it currently does the job. It
-needs three arguments:
+plombackup: plomlompom's backup script
+======================================
 
-- the relative path of a text file that contains on each line the
-  relative path of a file or directory to back up
+Description
+-----------
 
-- the absolute or relative path of a block device with a
-  LUKS-encrypted filesystem on it
+This script automates plomlompom's backup process. It copies files and
+directories named in a text file into a directory on a LUKS-encrypted
+device. It needs three arguments:
 
-- the path of a directory on the aforementioned filesystem into which
-  to back up the files and directories; this path must be relative to
-  the root of said filesystem
+-i: the relative path of a text file that contains on each line the
+    relative path of a file or directory to back up
+
+-d: the absolute or relative path of a block device with a
+    LUKS-encrypted filesystem on it
+
+-o: the path of a directory on the aforementioned filesystem into which
+    to back up the files and directories; this path must be relative to
+    the root of said filesystem
 
 On execution, the script asks for the LUKS decryption key. It may
 further ask for confirmation before overwriting an existing backup
 directory. Into the backup directory, it writes a file "lastupdate" that
-contains the date of the backup process. All file copies are compared
-against their originals to warn against potential data corruption.
+contains the date of the backup process.
+
+Further options:
+
+-h: Print a short script usage info.
+
+-c: Compare all file copies against their respective originals to warn
+    against potential data corruption. Makes the whole process take A
+    LOT more time.
+
+Internals
+---------
 
 The script opens and closes the LUKS container and mounts its
 filesystem to /mnt/secret (and unmounts it again when finished). If
-/mnt/secret does not exists, it gets created for the duration of the
+/mnt/secret does not exist, it gets created for the duration of the
 script and deleted at the end. Various safeguards are implemented to
 avoid collisions with other mounts, device mappings, existing
 directories etc. If foreseeable errors occur, the script tries to clean
 up and exits. If unforeseen errors occur, the script does not clean up
-on exit, but informs on what should be done to clean up manually.
+on exit, but informs on what should be done to clean up manually. 
