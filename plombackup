@@ -40,7 +40,7 @@ trap exitwarning ERR
 # Abort with usage info if no proper arguments given.
 
 function exitusage {
-  echo 'Usage: plombackup.sh -i DIRLIST -d BACKUPDEVICE -o BACKUPDIR [-c]
+  echo 'Usage: plombackup -i DIRLIST -d BACKUPDEVICE -o BACKUPDIR [-c]
 Options:
   -h                  display this help
   -i DIRLIST          set path of file to read files/dirs to backup from
